@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>สมาชิกในหมู่ (About Us) | โครงงานลูกเสือ</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    html, body {
+      min-height: 100%;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    body {
+      font-family: 'Prompt', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Ambient Background Glow */
+    .ambient-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .ambient-circle-1 {
+      position: absolute;
+      top: -80px;
+      left: 20%;
+      width: 540px;
+      height: 540px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.18) 0%, rgba(147, 197, 253, 0.08) 50%, rgba(255, 255, 255, 0) 70%);
+      filter: blur(80px);
+      border-radius: 50%;
+    }
+
+    .ambient-circle-2 {
+      position: absolute;
+      top: 360px;
+      right: 15%;
+      width: 480px;
+      height: 480px;
+      background: radial-gradient(circle, rgba(167, 139, 250, 0.16) 0%, rgba(216, 180, 254, 0.06) 50%, rgba(255, 255, 255, 0) 70%);
+      filter: blur(80px);
+      border-radius: 50%;
+    }
+
+    /* ===================================================
+       Attached Top Header (Apple Glassmorphism)
+       =================================================== */
+    .header-top {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+      height: 60px;
+      z-index: 1000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(28px) saturate(190%);
+      -webkit-backdrop-filter: blur(28px) saturate(190%);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .header-container {
+      width: 100%;
+      max-width: 1120px;
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      padding: 0 24px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .brand:hover {
+      opacity: 0.85;
+      transform: scale(0.99);
+    }
+
+    .brand-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #111827;
+      display: inline-block;
+      line-height: 1.2;
+    }
+
+    .nav-pill-wrapper {
+      background: rgba(0, 0, 0, 0.05);
+      padding: 4px;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      list-style: none;
+      gap: 4px;
+    }
+
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 18px;
+      text-decoration: none;
+      font-size: 0.93rem;
+      font-weight: 500;
+      color: #4b5563;
+      border-radius: 9999px;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      white-space: nowrap;
+    }
+
+    .nav-link:hover {
+      color: #111827;
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    .nav-link.active {
+      color: #0071e3;
+      font-weight: 600;
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      cursor: pointer;
+      color: #1d1d1f;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .mobile-menu-btn:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    .mobile-drawer {
+      display: none;
+      position: fixed;
+      top: 60px;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(30px) saturate(190%);
+      -webkit-backdrop-filter: blur(30px) saturate(190%);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 0 0 22px 22px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.1);
+      padding: 16px 20px;
+      flex-direction: column;
+      gap: 6px;
+      opacity: 0;
+      transform: translateY(-8px);
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 999;
+    }
+
+    .mobile-drawer.open {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .mobile-link {
+      display: flex;
+      align-items: center;
+      padding: 12px 18px;
+      font-size: 1rem;
+      text-decoration: none;
+      color: #1d1d1f;
+      font-weight: 500;
+      border-radius: 14px;
+    }
+
+    .mobile-link.active {
+      background: rgba(0, 113, 227, 0.08);
+      color: #0071e3;
+      font-weight: 600;
+    }
+
+    /* ===================================================
+       Main Content Layout
+       =================================================== */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 88px 20px 48px;
+      max-width: 1140px;
+      margin: 0 auto;
+      width: 100%;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Hero Section matching exact image style */
+    .about-hero {
+      text-align: center;
+      margin-bottom: 34px;
+    }
+
+    .hero-top-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 18px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: #0284c7;
+      background: #f0f9ff;
+      border-radius: 9999px;
+      margin-bottom: 14px;
+      border: 1px solid #e0f2fe;
+      letter-spacing: 0.01em;
+    }
+
+    .about-main-title {
+      font-size: clamp(2rem, 3.8vw, 2.7rem);
+      font-weight: 800;
+      color: #1e3a8a;
+      letter-spacing: -0.025em;
+      margin-bottom: 8px;
+    }
+
+    .about-sub-title {
+      font-size: 1.05rem;
+      color: #475569;
+      font-weight: 500;
+    }
+
+    /* ===================================================
+       7 Members Grid (Matching Exact User Layout)
+       =================================================== */
+    .members-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      width: 100%;
+      margin-bottom: 36px;
+    }
+
+    .members-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      width: 100%;
+    }
+
+    /* Card Box */
+    .scout-card {
+      background: #ffffff;
+      border-radius: 22px;
+      padding: 30px 20px 26px;
+      width: 250px;
+      border: 1px solid rgba(226, 232, 240, 0.85);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.035), 0 1px 3px rgba(0, 0, 0, 0.02);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+    }
+
+    .scout-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.07), 0 2px 6px rgba(0, 0, 0, 0.03);
+    }
+
+    /* Circular Avatar with Blue Glow */
+    .avatar-box {
+      width: 106px;
+      height: 106px;
+      margin-bottom: 18px;
+      position: relative;
+      border-radius: 50%;
+    }
+
+    .avatar-img-circle {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+      border: 3px solid #3b82f6;
+      box-shadow: 0 6px 18px rgba(59, 130, 246, 0.28);
+      background: #e2e8f0;
+      transition: transform 0.25s ease;
+    }
+
+    .scout-card:hover .avatar-img-circle {
+      transform: scale(1.04);
+    }
+
+    /* Role Pill Badges */
+    .role-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 16px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: 9999px;
+      margin-bottom: 12px;
+      letter-spacing: 0.01em;
+    }
+
+    /* นายหมู่ (Leader) Badge - Yellow/Gold */
+    .role-pill-leader {
+      background: #fef3c7;
+      color: #d97706;
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    /* สมาชิก (Member) Badge - Light Gray/Blue */
+    .role-pill-member {
+      background: #f1f5f9;
+      color: #64748b;
+      border: 1px solid rgba(203, 213, 225, 0.6);
+    }
+
+    /* รองนายหมู่ (Deputy Leader) Badge - Light Blue/Purple */
+    .role-pill-deputy {
+      background: #eff6ff;
+      color: #3b82f6;
+      border: 1px solid rgba(59, 130, 246, 0.22);
+    }
+
+    /* Order Text */
+    .member-order {
+      font-size: 0.82rem;
+      color: #94a3b8;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    /* Member Name */
+    .member-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: -0.015em;
+      line-height: 1.35;
+      white-space: nowrap;
+    }
+
+    /* ===================================================
+       Navigation Actions Toolbar
+       =================================================== */
+    .actions-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      width: 100%;
+      margin-top: 14px;
+    }
+
+    .btn-action-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 26px;
+      font-size: 0.92rem;
+      font-weight: 500;
+      color: #ffffff;
+      background: #0071e3;
+      border-radius: 9999px;
+      text-decoration: none;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 14px rgba(0, 113, 227, 0.25);
+    }
+
+    .btn-action-primary:hover {
+      background: #0077ed;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(0, 113, 227, 0.35);
+    }
+
+    .btn-action-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 24px;
+      font-size: 0.92rem;
+      font-weight: 500;
+      color: #1d1d1f;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 9999px;
+      text-decoration: none;
+      backdrop-filter: blur(10px);
+      transition: all 0.25s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    }
+
+    .btn-action-secondary:hover {
+      background: #ffffff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 1080px) {
+      .scout-card {
+        width: 220px;
+        padding: 24px 16px 22px;
+      }
+      .member-name {
+        font-size: 0.96rem;
+      }
+    }
+
+    @media (max-width: 820px) {
+      .header-container {
+        display: flex;
+        justify-content: space-between;
+        padding: 0 20px;
+      }
+      .nav-pill-wrapper {
+        display: none;
+      }
+      .mobile-menu-btn, .mobile-drawer {
+        display: flex;
+      }
+      main {
+        padding: 76px 16px 36px;
+      }
+      .scout-card {
+        width: calc(50% - 12px);
+        max-width: 260px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .scout-card {
+        width: 100%;
+        max-width: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Light Circles -->
+  <div class="ambient-bg">
+    <div class="ambient-circle-1"></div>
+    <div class="ambient-circle-2"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="header-top" id="navbar">
+    <div class="header-container">
+      <a href="index.html" class="brand">
+        <span class="brand-title">โครงงานลูกเสือ</span>
+      </a>
+
+      <div class="nav-pill-wrapper">
+        <ul class="nav-links">
+          <li><a href="index.html" class="nav-link">หน้าหลัก</a></li>
+          <li><a href="features.html" class="nav-link">โครงงาน</a></li>
+          <li><a href="models.html" class="nav-link">โมเดล</a></li>
+          <li><a href="about.html" class="nav-link active">About</a></li>
+        </ul>
+      </div>
+
+      <div class="nav-actions">
+        <button class="mobile-menu-btn" id="mobileToggle" aria-label="เปิดเมนู">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Drawer -->
+  <div class="mobile-drawer" id="mobileDrawer">
+    <a href="index.html" class="mobile-link">หน้าหลัก</a>
+    <a href="features.html" class="mobile-link">โครงงาน</a>
+    <a href="models.html" class="mobile-link">โมเดล</a>
+    <a href="about.html" class="mobile-link active">About</a>
+  </div>
+
+  <!-- Main Content -->
+  <main>
+    <!-- Hero Header -->
+    <section class="about-hero">
+      <div class="hero-top-badge">
+        <span>โครงการลูกเสือ กลุ่ม 2 กอง 3 หมู่ 1</span>
+      </div>
+      <h1 class="about-main-title">สมาชิกในหมู่</h1>
+      <p class="about-sub-title">แผนกวิชา เทคโนโลยีสารสนเทศ</p>
+    </section>
+
+    <!-- 7 Members Cards Container -->
+    <div class="members-container">
+      
+      <!-- Row 1: 4 Cards -->
+      <div class="members-row">
+        
+        <!-- Card 1: นายหมู่ -->
+        <div class="scout-card">
+          <div class="avatar-box">
+            <img src="ps2/63eb7aa6-b3ab-465a-94fb-d3e30cea3639.jpg" alt="นาย ปภัสชล จัตุรัส" class="avatar-img-circle">
+          </div>
+          <span class="role-pill role-pill-leader">นายหมู่</span>
+          <span class="member-order">ลำดับที่ 1</span>
+          <h3 class="member-name">นาย ปภัสชล จัตุรัส</h3>
+        </div>
+
+        <!-- Card 2: สมาชิก -->
+        <div class="scout-card">
+          <div class="avatar-box">
+            <img src="ps2/5469213d-acf0-402a-b780-54cabdcaefdb.jpg" alt="นาย จีระนันต์ ภูกัทษิณ" class="avatar-img-circle">
+          </div>
+          <span class="role-pill role-pill-member">สมาชิก</span>
+          <span class="member-order">ลำดับที่ 2</span>
+          <h3 class="member-name">นาย จีระนันต์ ภูกัทษิณ</h3>
+        </div>
+
+        <!-- Card 3: สมาชิก -->
+        <div class="scout-card">
+          <div class="avatar-box">
+            <img src="ps2/d2a6ea25-069e-4c2f-ae5e-3795f68e5416.jpg" alt="นาย พงศ์พิพรรธน์ แก้วโรจน์" class="avatar-img-circle">
+          </div>
+          <span class="role-pill role-pill-member">สมาชิก</span>
+          <span class="member-order">ลำดับที่ 3</span>
+          <h3 class="member-name">นาย พงศ์พิพรรธน์ แก้วโรจน์</h3>
+        </div>
+
+        <!-- Card 4: สมาชิก -->
+        <div class="scout-card">
+          <div class="avatar-box">
+            <img src="ps2/1bb34f80-5bf9-4d3d-8195-dffaea689f91.jpg" alt="นาย อรุณรัช กันหาคุณ" class="avatar-img-circle">
+          </div>
+          <span class="role-pill role-pill-member">สมาชิก</span>
+          <span class="member-order">ลำดับที่ 4</span>
+          <h3 class="member-name">นาย อรุณรัช กันหาคุณ</h3>
+        </div>
+
+      </div>
+
+      <!-- Row 2: 3 Cards (Centered) -->
+      <div class="members-row">
+        
+        <!-- Card 5: สมาชิก -->
+        <div class="scout-card">
+          <div class="avatar-box">
+            <img src="ps2/344c9485-add4-43fe-a30f-6a494c25507e.jpg" alt="นาย ธนโชติ เทพภู" class="avatar-img-circle">
+          </div>
+          <span class="role-pill role-pill-member">สมาชิก</span>
+          <span class="member-order">ลำดับที่ 5</span>
+          <h3 class="member-name">นาย ธนโชติ เทพภู</h3>
+        </div>
+
+        <!-- Card 6: สมาชิก -->
+        <div class="scout-card">
+          <div class="avatar-box">
+            <img src="ps2/ef62a02f-8317-4eea-9881-6f80a026bd33.jpg" alt="นาย สมใจ หลักคำ" class="avatar-img-circle">
+          </div>
+          <span class="role-pill role-pill-member">สมาชิก</span>
+          <span class="member-order">ลำดับที่ 6</span>
+          <h3 class="member-name">นาย สมใจ หลักคำ</h3>
+        </div>
+
+        <!-- Card 7: รองนายหมู่ -->
+        <div class="scout-card">
+          <div class="avatar-box">
+            <img src="ps2/61722aea-a80a-4873-b28d-91e9e763d7cc.jpg" alt="นาย นพเดช โคจัดอัด" class="avatar-img-circle">
+          </div>
+          <span class="role-pill role-pill-deputy">รองนายหมู่</span>
+          <span class="member-order">ลำดับที่ 7</span>
+          <h3 class="member-name">นาย นพเดช โคจัดอัด</h3>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Navigation Actions -->
+    <div class="actions-container">
+      <a href="models.html" class="btn-action-primary">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+          <polyline points="2 17 12 22 22 17"></polyline>
+          <polyline points="2 12 12 17 22 12"></polyline>
+        </svg>
+        <span>ดูแบบจำลอง 3D (3D Model)</span>
+      </a>
+
+      <a href="features.html" class="btn-action-secondary">
+        <span>ไปยังหน้าโครงงาน</span>
+      </a>
+
+      <a href="index.html" class="btn-action-secondary">
+        <span>← กลับหน้าหลัก</span>
+      </a>
+    </div>
+  </main>
+
+  <script>
+    const mobileToggle = document.getElementById('mobileToggle');
+    const mobileDrawer = document.getElementById('mobileDrawer');
+
+    mobileToggle.addEventListener('click', () => {
+      mobileDrawer.classList.toggle('open');
+    });
+
+    document.querySelectorAll('.mobile-link').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileDrawer.classList.remove('open');
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      const navbar = document.getElementById('navbar');
+      if (!navbar.contains(e.target) && !mobileDrawer.contains(e.target)) {
+        mobileDrawer.classList.remove('open');
+      }
+    });
+  </script>
+</body>
+</html>

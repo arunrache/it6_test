@@ -1,0 +1,2416 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>โมเดล 3D ชั้นวางรองเท้าไม้ไผ่ | โครงงานลูกเสือ</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Three.js & OrbitControls with Multi-CDN Fallback -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    if (typeof THREE === 'undefined') {
+      document.write('<script src="https://unpkg.com/three@0.128.0/build/three.min.js"><\/script>');
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script>
+    if (typeof THREE !== 'undefined' && typeof THREE.OrbitControls === 'undefined') {
+      document.write('<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>');
+    }
+  </script>
+  
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    html, body {
+      min-height: 100%;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    body {
+      font-family: 'Prompt', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f5f5f7;
+      color: #1d1d1f;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Ambient Background Glow */
+    .ambient-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .ambient-circle-1 {
+      position: absolute;
+      top: -80px;
+      right: 15%;
+      width: 520px;
+      height: 520px;
+      background: radial-gradient(circle, rgba(226, 175, 100, 0.28) 0%, rgba(245, 158, 11, 0.08) 50%, rgba(255, 255, 255, 0) 70%);
+      filter: blur(80px);
+      border-radius: 50%;
+    }
+
+    .ambient-circle-2 {
+      position: absolute;
+      top: 300px;
+      left: 8%;
+      width: 480px;
+      height: 480px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.18) 0%, rgba(147, 197, 253, 0.05) 50%, rgba(255, 255, 255, 0) 70%);
+      filter: blur(80px);
+      border-radius: 50%;
+    }
+
+    /* ===================================================
+       Attached Top Header (Apple Glassmorphism)
+       =================================================== */
+    .header-top {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+      height: 60px;
+      z-index: 1000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(28px) saturate(190%);
+      -webkit-backdrop-filter: blur(28px) saturate(190%);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .header-container {
+      width: 100%;
+      max-width: 1120px;
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      padding: 0 24px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .brand:hover {
+      opacity: 0.85;
+      transform: scale(0.99);
+    }
+
+    .brand-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #111827;
+      display: inline-block;
+      line-height: 1.2;
+    }
+
+    .nav-pill-wrapper {
+      background: rgba(0, 0, 0, 0.05);
+      padding: 4px;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      list-style: none;
+      gap: 4px;
+    }
+
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 18px;
+      text-decoration: none;
+      font-size: 0.93rem;
+      font-weight: 500;
+      color: #4b5563;
+      border-radius: 9999px;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      white-space: nowrap;
+    }
+
+    .nav-link:hover {
+      color: #111827;
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    .nav-link.active {
+      color: #0071e3;
+      font-weight: 600;
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      cursor: pointer;
+      color: #1d1d1f;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .mobile-menu-btn:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    .mobile-drawer {
+      display: none;
+      position: fixed;
+      top: 60px;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(30px) saturate(190%);
+      -webkit-backdrop-filter: blur(30px) saturate(190%);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 0 0 22px 22px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.1);
+      padding: 16px 20px;
+      flex-direction: column;
+      gap: 6px;
+      opacity: 0;
+      transform: translateY(-8px);
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 999;
+    }
+
+    .mobile-drawer.open {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .mobile-link {
+      display: flex;
+      align-items: center;
+      padding: 12px 18px;
+      font-size: 1rem;
+      text-decoration: none;
+      color: #1d1d1f;
+      font-weight: 500;
+      border-radius: 14px;
+    }
+
+    .mobile-link.active {
+      background: rgba(0, 113, 227, 0.08);
+      color: #0071e3;
+      font-weight: 600;
+    }
+
+    /* ===================================================
+       Main Content Layout
+       =================================================== */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 74px 14px 36px;
+      max-width: 900px;
+      margin: 0 auto;
+      width: 100%;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Hero Section */
+    .hero-header {
+      text-align: center;
+      margin-bottom: 24px;
+      max-width: 820px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: #b45309;
+      background: rgba(245, 158, 11, 0.12);
+      border-radius: 9999px;
+      margin-bottom: 12px;
+      border: 1px solid rgba(245, 158, 11, 0.24);
+      letter-spacing: 0.01em;
+    }
+
+    .hero-title {
+      font-size: clamp(2rem, 3.8vw, 2.75rem);
+      font-weight: 700;
+      line-height: 1.22;
+      letter-spacing: -0.03em;
+      color: #1d1d1f;
+      margin-bottom: 10px;
+    }
+
+    .hero-title span {
+      background: linear-gradient(135deg, #d97706 0%, #b45309 50%, #0071e3 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-desc {
+      color: #6e6e73;
+      font-size: clamp(0.92rem, 1.4vw, 1.05rem);
+      line-height: 1.6;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    /* ===================================================
+       Interactive 3D Viewer Container
+       =================================================== */
+    .viewer-card {
+      width: 100%;
+      max-width: 860px;
+      margin: 0 auto 20px auto;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border-radius: 18px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.02);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: box-shadow 0.3s ease;
+    }
+
+    .viewer-card:hover {
+      box-shadow: 0 22px 56px rgba(0, 0, 0, 0.09), 0 4px 14px rgba(0, 0, 0, 0.04);
+    }
+
+    /* Viewer Header Toolbar */
+    .viewer-toolbar-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 12px;
+      background: rgba(255, 255, 255, 0.78);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+      flex-wrap: wrap;
+      gap: 6px;
+      z-index: 10;
+    }
+
+    .toolbar-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.84rem;
+      font-weight: 500;
+      color: #4b5563;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+      animation: pulseDot 2s infinite;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.9); }
+    }
+
+    .camera-presets {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0, 0, 0, 0.04);
+      padding: 3px;
+      border-radius: 9999px;
+    }
+
+    .preset-btn {
+      background: transparent;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-family: inherit;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: #4b5563;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .preset-btn:hover {
+      color: #111827;
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    .preset-btn.active {
+      color: #0071e3;
+      background: #ffffff;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+      font-weight: 600;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tool-icon-btn {
+      background: rgba(0, 0, 0, 0.04);
+      border: 1px solid rgba(0, 0, 0, 0.04);
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #4b5563;
+      transition: all 0.2s ease;
+    }
+
+    .tool-icon-btn:hover {
+      background: #ffffff;
+      color: #111827;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    /* 3D Canvas Stage */
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      height: 440px;
+      background: radial-gradient(circle at center, #ffffff 0%, #f1f1f4 100%);
+      overflow: hidden;
+      cursor: grab;
+      user-select: none;
+    }
+
+    .canvas-container:active {
+      cursor: grabbing;
+    }
+
+    #webgl-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Floating Canvas Overlays */
+    .canvas-hint {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: #ffffff;
+      padding: 6px 16px;
+      border-radius: 9999px;
+      font-size: 0.78rem;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0.85;
+      transition: opacity 0.4s ease;
+      white-space: nowrap;
+      z-index: 5;
+    }
+
+    .part-tooltip {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 14px;
+      padding: 10px 14px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+      pointer-events: none;
+      max-width: 320px;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 5;
+    }
+
+    .part-tooltip.hidden {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+
+    .part-title {
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: #111827;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 2px;
+    }
+
+    .part-desc {
+      font-size: 0.76rem;
+      color: #6e6e73;
+      line-height: 1.4;
+    }
+
+    /* Reference Photo Preview Pill */
+    .real-photo-pill {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 9999px;
+      padding: 6px 14px 6px 8px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+      cursor: pointer;
+      transition: all 0.25s ease;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #1d1d1f;
+      z-index: 5;
+    }
+
+    .real-photo-pill:hover {
+      background: #ffffff;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+      color: #0071e3;
+    }
+
+    .real-photo-thumb {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1.5px solid #d97706;
+    }
+
+    /* Viewer Bottom Controls Toolbar */
+    .viewer-toolbar-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 10px;
+      background: rgba(255, 255, 255, 0.88);
+      border-top: 1px solid rgba(0, 0, 0, 0.06);
+      flex-wrap: wrap;
+      gap: 6px;
+      z-index: 10;
+    }
+
+    .ctrl-pill-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 11px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      border-radius: 9999px;
+      background: rgba(0, 0, 0, 0.04);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      color: #374151;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .ctrl-pill-btn:hover {
+      background: rgba(0, 0, 0, 0.08);
+      color: #111827;
+      transform: translateY(-1px);
+    }
+
+    .ctrl-pill-btn.active {
+      background: #0071e3;
+      color: #ffffff;
+      border-color: #0071e3;
+      box-shadow: 0 2px 10px rgba(0, 113, 227, 0.3);
+      font-weight: 600;
+    }
+
+    .ctrl-pill-btn.active svg {
+      stroke: #ffffff;
+    }
+
+    /* Loading Spinner */
+    .viewer-loading {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #fbfbfd;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      z-index: 20;
+      transition: opacity 0.5s ease;
+    }
+
+    .viewer-loading.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .spinner {
+      width: 44px;
+      height: 44px;
+      border: 3.5px solid rgba(0, 113, 227, 0.15);
+      border-top-color: #0071e3;
+      border-radius: 50%;
+      animation: spin 0.85s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      font-size: 0.9rem;
+      color: #4b5563;
+      font-weight: 500;
+    }
+
+    /* ===================================================
+       Specifications Grid (3 Apple-style Glass Cards)
+       =================================================== */
+    .specs-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      width: 100%;
+      max-width: 860px;
+      margin: 0 auto 20px auto;
+    }
+
+    .spec-card {
+      background: rgba(255, 255, 255, 0.78);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 16px;
+      padding: 18px 18px;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.03);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .spec-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.06);
+    }
+
+    .spec-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .spec-icon-box {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      background: rgba(245, 158, 11, 0.1);
+      color: #d97706;
+    }
+
+    .spec-card:nth-child(2) .spec-icon-box {
+      background: rgba(16, 185, 129, 0.1);
+      color: #059669;
+    }
+
+    .spec-card:nth-child(3) .spec-icon-box {
+      background: rgba(0, 113, 227, 0.1);
+      color: #0071e3;
+    }
+
+    .spec-title {
+      font-size: 1.12rem;
+      font-weight: 600;
+      color: #111827;
+      letter-spacing: -0.01em;
+    }
+
+    .spec-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .spec-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 0.86rem;
+      color: #4b5563;
+      line-height: 1.45;
+    }
+
+    .spec-bullet {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #9ca3af;
+      margin-top: 7px;
+      flex-shrink: 0;
+    }
+
+    .spec-item strong {
+      color: #1f2937;
+      font-weight: 600;
+    }
+
+    /* ===================================================
+       Download & Navigation Actions
+       =================================================== */
+    .actions-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .btn-action-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 26px;
+      font-size: 0.92rem;
+      font-weight: 500;
+      color: #ffffff;
+      background: #0071e3;
+      border-radius: 9999px;
+      text-decoration: none;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 14px rgba(0, 113, 227, 0.25);
+    }
+
+    .btn-action-primary:hover {
+      background: #0077ed;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(0, 113, 227, 0.35);
+    }
+
+    .btn-action-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 24px;
+      font-size: 0.92rem;
+      font-weight: 500;
+      color: #1d1d1f;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 9999px;
+      text-decoration: none;
+      backdrop-filter: blur(10px);
+      transition: all 0.25s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    }
+
+    .btn-action-secondary:hover {
+      background: #ffffff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+    }
+
+    /* ===================================================
+       Modal Comparison with Real Photo
+       =================================================== */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      background: #ffffff;
+      border-radius: 26px;
+      max-width: 680px;
+      width: 100%;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+      transform: scale(0.94);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-backdrop.open .modal-content {
+      transform: scale(1);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 24px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .modal-title {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .modal-close-btn {
+      background: rgba(0, 0, 0, 0.05);
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #4b5563;
+      transition: background 0.2s;
+    }
+
+    .modal-close-btn:hover {
+      background: rgba(0, 0, 0, 0.1);
+      color: #111827;
+    }
+
+    .modal-body {
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-img-wrapper {
+      width: 100%;
+      max-height: 360px;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .modal-img-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .modal-desc {
+      font-size: 0.88rem;
+      color: #4b5563;
+      line-height: 1.55;
+    }
+
+    /* ===================================================
+       Responsive Breakpoints
+       =================================================== */
+    @media (max-width: 900px) {
+      .specs-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+      .canvas-container {
+        height: 440px;
+      }
+      .viewer-toolbar-top {
+        justify-content: center;
+      }
+      .toolbar-status {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 820px) {
+      .header-container {
+        display: flex;
+        justify-content: space-between;
+        padding: 0 20px;
+      }
+      .nav-pill-wrapper {
+        display: none;
+      }
+      .mobile-menu-btn, .mobile-drawer {
+        display: flex;
+      }
+      main {
+        padding: 76px 16px 36px;
+      }
+      .canvas-container {
+        height: 380px;
+      }
+      .ctrl-pill-btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+      }
+      .canvas-hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Light Circles -->
+  <div class="ambient-bg">
+    <div class="ambient-circle-1"></div>
+    <div class="ambient-circle-2"></div>
+  </div>
+
+  <!-- Attached Top Header -->
+  <header class="header-top" id="navbar">
+    <div class="header-container">
+      <a href="index.html" class="brand">
+        <span class="brand-title">โครงงานลูกเสือ</span>
+      </a>
+
+      <div class="nav-pill-wrapper">
+        <ul class="nav-links">
+          <li><a href="index.html" class="nav-link">หน้าหลัก</a></li>
+          <li><a href="features.html" class="nav-link">โครงงาน</a></li>
+          <li><a href="models.html" class="nav-link active">โมเดล</a></li>
+          <li><a href="about.html" class="nav-link">About</a></li>
+        </ul>
+      </div>
+
+      <div class="nav-actions">
+        <button class="mobile-menu-btn" id="mobileToggle" aria-label="เปิดเมนู">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Drawer -->
+  <div class="mobile-drawer" id="mobileDrawer">
+    <a href="index.html" class="mobile-link">หน้าหลัก</a>
+    <a href="features.html" class="mobile-link">โครงงาน</a>
+    <a href="models.html" class="mobile-link active">โมเดล</a>
+    <a href="about.html" class="mobile-link">About</a>
+  </div>
+
+  <!-- Main Content -->
+  <main>
+    <!-- Hero Header -->
+    <section class="hero-header">
+      <div class="hero-badge">
+        <span>🎋 นวัตกรรมชาวค่าย • แบบจำลอง 3 มิติเชิงโต้ตอบ</span>
+      </div>
+      <h1 class="hero-title">
+        โมเดล 3D <span>ชั้นวางรองเท้าไม้ไผ่</span>
+      </h1>
+      <p class="hero-desc">
+        แบบจำลองเสมือนจริง 3 มิติ โครงงานชั้นวางรองเท้าชาวค่าย กลุ่ม 2 กอง 3 หมู่ 1 สำรวจโครงสร้างได้ 360 องศา ซูม ขยาย แยกชิ้นส่วนโครงสร้าง และวัดขนาดเสมือนจริงตามหลักวิชาลูกเสือ
+      </p>
+    </section>
+
+    <!-- 3D Interactive Stage Card -->
+    <div class="viewer-card">
+      <!-- Top Toolbar -->
+      <div class="viewer-toolbar-top">
+        <div class="toolbar-status">
+          <span class="status-dot"></span>
+          <span>Three.js WebGL • 34 ชิ้นส่วนเสมือนจริง</span>
+        </div>
+
+        <div class="camera-presets">
+          <button class="preset-btn active" data-view="isometric" id="viewIso">
+            <span>🌐 3D</span>
+          </button>
+          <button class="preset-btn" data-view="front" id="viewFront">
+            <span>⬅️ ด้านหน้า</span>
+          </button>
+          <button class="preset-btn" data-view="side" id="viewSide">
+            <span>➡️ ด้านข้าง</span>
+          </button>
+          <button class="preset-btn" data-view="top" id="viewTop">
+            <span>⬆️ ด้านบน</span>
+          </button>
+        </div>
+
+        <div class="toolbar-actions">
+          <button class="tool-icon-btn" id="btnResetView" title="รีเซ็ตมุมมองกล้อง">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+              <path d="M3 3v5h5"></path>
+            </svg>
+          </button>
+          <button class="tool-icon-btn" id="btnFullscreen" title="แสดงเต็มหน้าจอ">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Canvas Stage -->
+      <div class="canvas-container" id="canvasContainer">
+        <canvas id="webgl-canvas"></canvas>
+
+        <!-- Loading Screen -->
+        <div class="viewer-loading" id="viewerLoading">
+          <div class="spinner"></div>
+          <span class="loading-text">กำลังประมวลผลโมเดล 3D ไม้ไผ่...</span>
+        </div>
+
+        <!-- Part Inspector Tooltip -->
+        <div class="part-tooltip hidden" id="partTooltip">
+          <div class="part-title" id="partTitle">🎋 เสาหลักไม้ไผ่</div>
+          <div class="part-desc" id="partDesc">เสาหลักรับน้ำหนักแนวตั้ง เส้นผ่านศูนย์กลาง 4.5 ซม.</div>
+        </div>
+
+        <!-- Real Photo Comparison Thumbnail Button -->
+        <button class="real-photo-pill" id="btnOpenPhotoModal" title="คลิกเพื่อดูภาพต้นแบบจริง">
+          <img src="ps2/bamboo_shoe_rack.jpg" alt="ภาพต้นแบบจริง" class="real-photo-thumb">
+          <span>📷 ดูภาพต้นแบบจริง</span>
+        </button>
+
+        <!-- Interaction Hint -->
+        <div class="canvas-hint" id="canvasHint">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 16v-4"></path>
+            <path d="M12 8h.01"></path>
+          </svg>
+          <span>หมุน: คลิกซ้ายลาก • เลื่อน: คลิกขวาลาก • ซูม: ลูกกลิ้งเมาส์</span>
+        </div>
+      </div>
+
+      <!-- Bottom Control Toolbar -->
+      <div class="viewer-toolbar-bottom">
+        <button class="ctrl-pill-btn active" id="btnToggleRotate">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+          </svg>
+          <span id="rotateBtnText">กำลังหมุนอัตโนมัติ</span>
+        </button>
+
+        <button class="ctrl-pill-btn active" id="btnToggleShoes">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 18v-2a4 4 0 0 1 4-4h2l2-4h4a3 3 0 0 1 3 3v5a2 2 0 0 1-2 2H3Z"></path>
+            <path d="M8 18v2M16 18v2"></path>
+          </svg>
+          <span id="shoesBtnText">👟 รองเท้าจำลอง (เปิด)</span>
+        </button>
+
+        <button class="ctrl-pill-btn" id="btnToggleLighting">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <span id="lightingBtnText">แสง: สตูดิโอ</span>
+        </button>
+
+        <button class="ctrl-pill-btn" id="btnToggleTexture">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+          </svg>
+          <span id="textureBtnText">ผิวไม้: ธรรมชาติ</span>
+        </button>
+
+        <button class="ctrl-pill-btn" id="btnToggleExplode">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M12 2v3m0 14v3M2 12h3m14 0h3m-3.5-6.5-2.1 2.1m-8.8 8.8-2.1 2.1m0-13 2.1 2.1m8.8 8.8 2.1 2.1"/>
+          </svg>
+          <span id="explodeBtnText">แยกชิ้นส่วน</span>
+        </button>
+
+        <button class="ctrl-pill-btn" id="btnToggleDimensions">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.4 2.4 0 0 1 0-3.4l2.6-2.6a2.4 2.4 0 0 1 3.4 0Z"></path>
+            <path d="m14.5 12.5 2-2m-4.5 4.5 2-2m-4.5 4.5 2-2"></path>
+          </svg>
+          <span id="dimBtnText">แสดงขนาด</span>
+        </button>
+
+        <button class="ctrl-pill-btn" id="btnToggleWireframe">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="18" x="3" y="3" rx="2"></rect>
+            <path d="M3 9h18M3 15h18M9 3v18M15 3v18"></path>
+          </svg>
+          <span>โครงลวด (Wireframe)</span>
+        </button>
+      </div>
+    </div>
+
+
+
+    <!-- Download & Navigation Buttons -->
+    <div class="actions-container">
+      <a href="bamboo_shoe_rack.obj" download="bamboo_shoe_rack.obj" class="btn-action-primary">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span>ดาวน์โหลดโมเดล 3D (.OBJ)</span>
+      </a>
+
+      <a href="bamboo_shoe_rack.mtl" download="bamboo_shoe_rack.mtl" class="btn-action-secondary">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        <span>ดาวน์โหลดไฟล์วัสดุ (.MTL)</span>
+      </a>
+
+      <a href="features.html" class="btn-action-secondary">
+        <span>← กลับไปหน้าโครงงาน</span>
+      </a>
+      <a href="about.html" class="btn-action-secondary">
+        <span>เกี่ยวกับเรา→</span>
+      </a>
+
+      <a href="index.html" class="btn-action-secondary">
+        <span>หน้าหลัก</span>
+      </a>
+    </div>
+  </main>
+
+  <!-- Modal Comparison with Real Prototype Photo -->
+  <div class="modal-backdrop" id="photoModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">📷 ภาพถ่ายต้นแบบจริง (ชั้นวางรองเท้าไม้ไผ่)</h3>
+        <button class="modal-close-btn" id="btnClosePhotoModal" aria-label="ปิด">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-img-wrapper">
+          <img src="ps2/bamboo_shoe_rack.jpg" alt="ภาพถ่ายต้นแบบชั้นวางรองเท้าไม้ไผ่ชาวค่าย">
+        </div>
+        <p class="modal-desc">
+          <strong>ภาพต้นแบบจริง:</strong> ชั้นวางรองเท้าไม้ไผ่ 2 ชั้น ประกอบขึ้นจากไม้ไผ่ธรรมชาติ คัดขนาดลำเสาและซี่ระแนงให้สมส่วน ยึดข้อต่อด้วยน็อตเกลียวเพื่อให้ถอดประกอบและเคลื่อนย้ายได้ง่าย โดยโมเดล 3 มิติด้านบนได้จำลองขนาด สัดส่วน และข้อปล้องไม้ไผ่ตามต้นแบบจริงทุกประการ
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Drawer Toggle Script -->
+  <script>
+    const mobileToggle = document.getElementById('mobileToggle');
+    const mobileDrawer = document.getElementById('mobileDrawer');
+
+    mobileToggle.addEventListener('click', () => {
+      mobileDrawer.classList.toggle('open');
+    });
+
+    document.querySelectorAll('.mobile-link').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileDrawer.classList.remove('open');
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      const navbar = document.getElementById('navbar');
+      if (!navbar.contains(e.target) && !mobileDrawer.contains(e.target)) {
+        mobileDrawer.classList.remove('open');
+      }
+    });
+
+    // Real Photo Modal
+    const photoModal = document.getElementById('photoModal');
+    const btnOpenPhotoModal = document.getElementById('btnOpenPhotoModal');
+    const btnClosePhotoModal = document.getElementById('btnClosePhotoModal');
+
+    btnOpenPhotoModal.addEventListener('click', () => photoModal.classList.add('open'));
+    btnClosePhotoModal.addEventListener('click', () => photoModal.classList.remove('open'));
+    photoModal.addEventListener('click', (e) => {
+      if (e.target === photoModal) photoModal.classList.remove('open');
+    });
+  </script>
+
+  <!-- ===================================================
+       Three.js 3D Interactive Model Engine
+       =================================================== -->
+  <script>
+    (function init3DViewer() {
+      // Check if Three.js is loaded
+      if (typeof THREE === 'undefined') {
+        const loadingText = document.querySelector('.loading-text');
+        if (loadingText) {
+          loadingText.innerHTML = '⚠️ กำลังโหลด Three.js จากเซิร์ฟเวอร์สำรอง... กรุณารอสักครู่';
+        }
+        return;
+      }
+
+      const canvas = document.getElementById('webgl-canvas');
+      const container = document.getElementById('canvasContainer');
+      const loadingEl = document.getElementById('viewerLoading');
+      const tooltip = document.getElementById('partTooltip');
+      const partTitleEl = document.getElementById('partTitle');
+      const partDescEl = document.getElementById('partDesc');
+
+      // 1. Scene, Camera, Renderer
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xf6f6f8);
+
+      const camera = new THREE.PerspectiveCamera(
+        40,
+        container.clientWidth / container.clientHeight,
+        0.1,
+        100
+      );
+      camera.position.set(1.22, 0.84, 1.22);
+
+      const renderer = new THREE.WebGLRenderer({
+        canvas: canvas,
+        antialias: true,
+        alpha: true,
+        powerPreference: 'high-performance'
+      });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.05;
+
+      // 2. OrbitControls (with Built-in Fallback Controller)
+      let controls;
+      if (typeof THREE.OrbitControls !== 'undefined') {
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.maxPolarAngle = Math.PI / 2 - 0.02; // Don't go below ground
+        controls.minDistance = 0.5;
+        controls.maxDistance = 3.6;
+        controls.target.set(0, 0.28, 0);
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 1.6;
+      } else {
+        // High-compatibility Fallback Orbit Controller
+        let isDragging = false;
+        let isRightDragging = false;
+        let prevMouse = { x: 0, y: 0 };
+        let spherical = { radius: 1.78, theta: 0.785, phi: 1.1 };
+        const target = new THREE.Vector3(0, 0.28, 0);
+
+        function updateFallbackCam() {
+          camera.position.x = target.x + spherical.radius * Math.sin(spherical.phi) * Math.sin(spherical.theta);
+          camera.position.y = target.y + spherical.radius * Math.cos(spherical.phi);
+          camera.position.z = target.z + spherical.radius * Math.sin(spherical.phi) * Math.cos(spherical.theta);
+          camera.lookAt(target);
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+          if (e.button === 2) isRightDragging = true;
+          else isDragging = true;
+          prevMouse = { x: e.clientX, y: e.clientY };
+        });
+        window.addEventListener('mouseup', () => { isDragging = false; isRightDragging = false; });
+        canvas.addEventListener('contextmenu', e => e.preventDefault());
+        window.addEventListener('mousemove', (e) => {
+          if (!isDragging && !isRightDragging) return;
+          const dx = e.clientX - prevMouse.x;
+          const dy = e.clientY - prevMouse.y;
+          prevMouse = { x: e.clientX, y: e.clientY };
+          if (isDragging) {
+            spherical.theta -= dx * 0.008;
+            spherical.phi = Math.max(0.1, Math.min(Math.PI / 2 - 0.03, spherical.phi - dy * 0.008));
+          } else if (isRightDragging) {
+            target.y += dy * 0.003;
+          }
+          updateFallbackCam();
+        });
+        canvas.addEventListener('wheel', (e) => {
+          spherical.radius = Math.max(1.2, Math.min(6.5, spherical.radius + e.deltaY * 0.0025));
+          updateFallbackCam();
+        }, { passive: true });
+
+        // Touch gestures for mobile
+        let touchStartDist = 0;
+        canvas.addEventListener('touchstart', (e) => {
+          if (e.touches.length === 1) {
+            isDragging = true;
+            prevMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+          } else if (e.touches.length === 2) {
+            touchStartDist = Math.hypot(
+              e.touches[0].clientX - e.touches[1].clientX,
+              e.touches[0].clientY - e.touches[1].clientY
+            );
+          }
+        }, { passive: true });
+        canvas.addEventListener('touchmove', (e) => {
+          if (e.touches.length === 1 && isDragging) {
+            const dx = e.touches[0].clientX - prevMouse.x;
+            const dy = e.touches[0].clientY - prevMouse.y;
+            prevMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            spherical.theta -= dx * 0.008;
+            spherical.phi = Math.max(0.1, Math.min(Math.PI / 2 - 0.03, spherical.phi - dy * 0.008));
+            updateFallbackCam();
+          } else if (e.touches.length === 2) {
+            const dist = Math.hypot(
+              e.touches[0].clientX - e.touches[1].clientX,
+              e.touches[0].clientY - e.touches[1].clientY
+            );
+            const delta = touchStartDist - dist;
+            spherical.radius = Math.max(0.6, Math.min(4.5, spherical.radius + delta * 0.005));
+            touchStartDist = dist;
+            updateFallbackCam();
+          }
+        }, { passive: true });
+        canvas.addEventListener('touchend', () => { isDragging = false; });
+
+        controls = {
+          autoRotate: true,
+          autoRotateSpeed: 1.6,
+          target: target,
+          update: function() {
+            if (this.autoRotate && !isDragging && !isRightDragging) {
+              spherical.theta += this.autoRotateSpeed * 0.005;
+              updateFallbackCam();
+            }
+          }
+        };
+        updateFallbackCam();
+      }
+
+      // 3. Lighting System (Multi-Ambiance Studio Quality)
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.82);
+      scene.add(ambientLight);
+
+      // Key light (soft studio softbox / sun)
+      const keyLight = new THREE.DirectionalLight(0xfffaee, 1.15);
+      keyLight.position.set(3.8, 5.2, 3.2);
+      keyLight.castShadow = true;
+      keyLight.shadow.mapSize.width = 2048;
+      keyLight.shadow.mapSize.height = 2048;
+      keyLight.shadow.camera.near = 0.5;
+      keyLight.shadow.camera.far = 14;
+      keyLight.shadow.camera.left = -2.2;
+      keyLight.shadow.camera.right = 2.2;
+      keyLight.shadow.camera.top = 2.2;
+      keyLight.shadow.camera.bottom = -1.2;
+      keyLight.shadow.bias = -0.0003;
+      keyLight.shadow.radius = 2.2;
+      scene.add(keyLight);
+
+      // Fill light (soft sky bounce)
+      const fillLight = new THREE.DirectionalLight(0xdbeafe, 0.52);
+      fillLight.position.set(-3.5, 3.2, -2.5);
+      scene.add(fillLight);
+
+      // Rim light 1 (warm golden rim light for silhouette)
+      const rimLight1 = new THREE.DirectionalLight(0xfef08a, 0.65);
+      rimLight1.position.set(2.8, 3.2, -3.2);
+      scene.add(rimLight1);
+
+      // Rim light 2 (cool edge highlight)
+      const rimLight2 = new THREE.DirectionalLight(0xbfdbfe, 0.42);
+      rimLight2.position.set(-2.8, 2.8, 3.0);
+      scene.add(rimLight2);
+
+      // Bottom bounce light
+      const bottomBounce = new THREE.DirectionalLight(0xffedd5, 0.28);
+      bottomBounce.position.set(0, -3, 0);
+      scene.add(bottomBounce);
+
+      // 4. Ground Contact Shadow & Studio Floor
+      const shadowCanvas = document.createElement('canvas');
+      shadowCanvas.width = 1024;
+      shadowCanvas.height = 1024;
+      const sCtx = shadowCanvas.getContext('2d');
+
+      // Multi-layer ambient occlusion contact shadow
+      const outerGrad = sCtx.createRadialGradient(512, 512, 40, 512, 512, 480);
+      outerGrad.addColorStop(0, 'rgba(25, 18, 10, 0.38)');
+      outerGrad.addColorStop(0.25, 'rgba(35, 22, 12, 0.22)');
+      outerGrad.addColorStop(0.55, 'rgba(50, 32, 18, 0.08)');
+      outerGrad.addColorStop(0.85, 'rgba(60, 40, 20, 0.02)');
+      outerGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      sCtx.fillStyle = outerGrad;
+      sCtx.fillRect(0, 0, 1024, 1024);
+
+      // Deep contact spots under the 4 legs (Proportional match)
+      const legSpots = [
+        { x: 512 - 145, y: 512 + 78 },
+        { x: 512 + 145, y: 512 + 78 },
+        { x: 512 - 145, y: 512 - 78 },
+        { x: 512 + 145, y: 512 - 78 }
+      ];
+      legSpots.forEach(sp => {
+        const spotGrad = sCtx.createRadialGradient(sp.x, sp.y, 4, sp.x, sp.y, 48);
+        spotGrad.addColorStop(0, 'rgba(15, 10, 5, 0.55)');
+        spotGrad.addColorStop(0.4, 'rgba(25, 15, 8, 0.25)');
+        spotGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        sCtx.fillStyle = spotGrad;
+        sCtx.beginPath();
+        sCtx.arc(sp.x, sp.y, 48, 0, Math.PI * 2);
+        sCtx.fill();
+      });
+
+      const shadowTex = new THREE.CanvasTexture(shadowCanvas);
+      const groundPlane = new THREE.Mesh(
+        new THREE.PlaneGeometry(2.8, 1.8),
+        new THREE.MeshBasicMaterial({
+          map: shadowTex,
+          transparent: true,
+          depthWrite: false
+        })
+      );
+      groundPlane.rotation.x = -Math.PI / 2;
+      groundPlane.position.y = 0.002;
+      scene.add(groundPlane);
+
+      // Subtle ground grid
+      const grid = new THREE.GridHelper(2.8, 16, 0xd4d4dc, 0xe9e9f0);
+      grid.position.y = 0.001;
+      scene.add(grid);
+
+      // 5. High-Definition Procedural Bamboo Textures Generator (1024x1024)
+      function generateUltraBambooTexture(preset = 'natural') {
+        const c = document.createElement('canvas');
+        c.width = 1024;
+        c.height = 1024;
+        const ctx = c.getContext('2d');
+
+        let baseColors, streakDark, streakLight, nodeDark, nodeLight;
+        if (preset === 'varnished') {
+          // Smoked Golden Caramel
+          baseColors = ['#b87428', '#d59443', '#ab671b', '#c78433', '#b87529'];
+          streakDark = 'rgba(70, 34, 6, ';
+          streakLight = 'rgba(255, 230, 185, ';
+          nodeDark = 'rgba(52, 22, 4, ';
+          nodeLight = 'rgba(235, 180, 110, ';
+        } else if (preset === 'green') {
+          // Fresh Green Camp Bamboo
+          baseColors = ['#76933c', '#92af53', '#68842e', '#8aa947', '#739036'];
+          streakDark = 'rgba(35, 52, 12, ';
+          streakLight = 'rgba(220, 245, 175, ';
+          nodeDark = 'rgba(38, 48, 10, ';
+          nodeLight = 'rgba(180, 210, 120, ';
+        } else {
+          // Natural Honey Bamboo (Realistic match to real photo)
+          baseColors = ['#e2bc7d', '#ecd09d', '#d4ab6a', '#e6c387', '#caa05b', '#dfb776'];
+          streakDark = 'rgba(92, 53, 16, ';
+          streakLight = 'rgba(255, 248, 228, ';
+          nodeDark = 'rgba(76, 36, 10, ';
+          nodeLight = 'rgba(255, 238, 195, ';
+        }
+
+        // Base gradient
+        const grad = ctx.createLinearGradient(0, 0, 0, 1024);
+        baseColors.forEach((col, idx) => {
+          grad.addColorStop(idx / (baseColors.length - 1), col);
+        });
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 1024, 1024);
+
+        // High-density longitudinal organic fiber streaks (750 lines)
+        for (let i = 0; i < 750; i++) {
+          const x = Math.random() * 1024;
+          const w = 0.5 + Math.random() * 1.8;
+          const isDark = Math.random() > 0.45;
+          const alpha = (0.025 + Math.random() * 0.065);
+          ctx.fillStyle = isDark ? streakDark + alpha + ')' : streakLight + (alpha * 1.4) + ')';
+          ctx.fillRect(x, 0, w, 1024);
+        }
+
+        // Realistic charred bamboo node rings & bright growth collars
+        const nodeY = [180, 512, 844];
+        nodeY.forEach(ny => {
+          const nGrad = ctx.createLinearGradient(0, ny - 32, 0, ny + 32);
+          nGrad.addColorStop(0, 'rgba(0,0,0,0)');
+          nGrad.addColorStop(0.35, nodeDark + '0.18)');
+          nGrad.addColorStop(0.48, nodeDark + '0.55)');
+          nGrad.addColorStop(0.50, nodeDark + '0.85)');
+          nGrad.addColorStop(0.52, nodeLight + '0.75)');
+          nGrad.addColorStop(0.65, nodeDark + '0.22)');
+          nGrad.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = nGrad;
+          ctx.fillRect(0, ny - 32, 1024, 64);
+
+          // Deep burnt line at the sheath junction
+          ctx.fillStyle = nodeDark + '0.78)';
+          ctx.fillRect(0, ny - 1.5, 1024, 3);
+        });
+
+        const tex = new THREE.CanvasTexture(c);
+        tex.wrapS = THREE.RepeatWrapping;
+        tex.wrapT = THREE.RepeatWrapping;
+        return tex;
+      }
+
+      function generateUltraBambooBump() {
+        const c = document.createElement('canvas');
+        c.width = 512;
+        c.height = 512;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#808080';
+        ctx.fillRect(0, 0, 512, 512);
+
+        for (let i = 0; i < 420; i++) {
+          const x = Math.random() * 512;
+          const w = 0.8 + Math.random() * 1.5;
+          const shade = Math.random() > 0.5 ? '#969696' : '#6a6a6a';
+          ctx.fillStyle = shade;
+          ctx.fillRect(x, 0, w, 512);
+        }
+
+        [90, 256, 422].forEach(ny => {
+          const bGrad = ctx.createLinearGradient(0, ny - 16, 0, ny + 16);
+          bGrad.addColorStop(0, '#808080');
+          bGrad.addColorStop(0.42, '#646464');
+          bGrad.addColorStop(0.50, '#adadad');
+          bGrad.addColorStop(0.58, '#6a6a6a');
+          bGrad.addColorStop(1, '#808080');
+          ctx.fillStyle = bGrad;
+          ctx.fillRect(0, ny - 16, 512, 32);
+        });
+
+        const tex = new THREE.CanvasTexture(c);
+        tex.wrapS = THREE.RepeatWrapping;
+        tex.wrapT = THREE.RepeatWrapping;
+        return tex;
+      }
+
+      function generateBambooEndGrain() {
+        const c = document.createElement('canvas');
+        c.width = 256;
+        c.height = 256;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#e2be84';
+        ctx.fillRect(0, 0, 256, 256);
+
+        // Bamboo outer bark ring
+        ctx.strokeStyle = '#854c18';
+        ctx.lineWidth = 14;
+        ctx.beginPath();
+        ctx.arc(128, 128, 120, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Dense fiber rings
+        for (let r = 110; r > 35; r -= 4) {
+          ctx.strokeStyle = `rgba(145, 90, 30, ${0.12 + Math.random() * 0.22})`;
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          ctx.arc(128, 128, r, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        // Inner hollow cavity
+        const hGrad = ctx.createRadialGradient(128, 128, 0, 128, 128, 45);
+        hGrad.addColorStop(0, '#261304');
+        hGrad.addColorStop(0.85, '#4a280c');
+        hGrad.addColorStop(1, '#9b672a');
+        ctx.fillStyle = hGrad;
+        ctx.beginPath();
+        ctx.arc(128, 128, 45, 0, Math.PI * 2);
+        ctx.fill();
+
+        const tex = new THREE.CanvasTexture(c);
+        return tex;
+      }
+
+      // Pre-generate textures
+      const textures = {
+        natural: generateUltraBambooTexture('natural'),
+        varnished: generateUltraBambooTexture('varnished'),
+        green: generateUltraBambooTexture('green')
+      };
+      const bambooBumpTex = generateUltraBambooBump();
+      const endGrainTex = generateBambooEndGrain();
+
+      // Materials
+      let currentFinish = 'natural';
+      const bambooMaterial = new THREE.MeshStandardMaterial({
+        map: textures.natural,
+        bumpMap: bambooBumpTex,
+        bumpScale: 0.018,
+        roughness: 0.32,
+        metalness: 0.02
+      });
+
+      const endGrainMaterial = new THREE.MeshStandardMaterial({
+        map: endGrainTex,
+        roughness: 0.45,
+        metalness: 0.02
+      });
+
+      const nodeRingMaterial = new THREE.MeshStandardMaterial({
+        color: 0x5a2d0c,
+        roughness: 0.52,
+        metalness: 0.02
+      });
+
+      const hexBoltMaterial = new THREE.MeshStandardMaterial({
+        color: 0xdde0e5,
+        roughness: 0.18,
+        metalness: 0.94
+      });
+
+      const washerMaterial = new THREE.MeshStandardMaterial({
+        color: 0xc4c7cc,
+        roughness: 0.26,
+        metalness: 0.88
+      });
+
+      // 6. Build the Bamboo Shoe Rack (Master Craftsmanship 3D Model)
+      const rackGroup = new THREE.Group();
+      scene.add(rackGroup);
+
+      const interactiveParts = [];
+      const explodeItems = [];
+
+      function registerPart(mesh, name, desc, explodeVector) {
+        mesh.userData = {
+          name: name,
+          desc: desc,
+          defaultPos: mesh.position.clone(),
+          explodePos: mesh.position.clone().add(explodeVector || new THREE.Vector3())
+        };
+        interactiveParts.push(mesh);
+        explodeItems.push(mesh);
+      }
+
+      // Materials setup
+      const ropeLashingMaterial = new THREE.MeshStandardMaterial({
+        color: 0xc89e6c,
+        roughness: 0.88,
+        metalness: 0.04
+      });
+
+      // Helper function to create bamboo node rings (swell collar + charred ring)
+      function createNodeDecoration(radius, length = 0.012) {
+        const nodeGrp = new THREE.Group();
+        const collarGeo = new THREE.CylinderGeometry(radius * 1.075, radius * 1.075, length, 24);
+        const collarMesh = new THREE.Mesh(collarGeo, bambooMaterial);
+        collarMesh.castShadow = true;
+        nodeGrp.add(collarMesh);
+
+        const ringGeo = new THREE.TorusGeometry(radius * 1.078, 0.0028, 10, 24);
+        const ringMesh = new THREE.Mesh(ringGeo, nodeRingMaterial);
+        ringMesh.rotation.x = Math.PI / 2;
+        nodeGrp.add(ringMesh);
+        return nodeGrp;
+      }
+
+      // Helper function to create Scout Square Lashing Knot wrap
+      function createScoutLashing(radius = 0.026) {
+        const lGroup = new THREE.Group();
+        for (let t = -1; t <= 1; t++) {
+          const torus = new THREE.Mesh(
+            new THREE.TorusGeometry(radius * 1.15, 0.0035, 8, 20),
+            ropeLashingMaterial
+          );
+          torus.position.y = t * 0.007;
+          torus.castShadow = true;
+          lGroup.add(torus);
+        }
+        const crossTurn = new THREE.Mesh(
+          new THREE.TorusGeometry(radius * 1.16, 0.0032, 8, 20),
+          ropeLashingMaterial
+        );
+        crossTurn.rotation.x = Math.PI / 2;
+        crossTurn.castShadow = true;
+        lGroup.add(crossTurn);
+        return lGroup;
+      }
+
+      // Geometries for Posts & Rails (Proportional scale: 85cm x 35cm x 56cm)
+      const legGeo = new THREE.CylinderGeometry(0.026, 0.027, 0.56, 28);
+      const legCapGeo = new THREE.CircleGeometry(0.026, 24);
+      const sideRailGeo = new THREE.CylinderGeometry(0.018, 0.018, 0.33, 24);
+      const sideRailCapGeo = new THREE.CircleGeometry(0.018, 20);
+      const longRailGeo = new THREE.CylinderGeometry(0.019, 0.019, 0.80, 28);
+      const longRailCapGeo = new THREE.CircleGeometry(0.019, 20);
+      const centerRailGeo = new THREE.CylinderGeometry(0.017, 0.017, 0.30, 24);
+      const slatCapGeo = new THREE.CircleGeometry(0.011, 16);
+
+      // --- A. 4 MAIN VERTICAL POSTS (เสาหลักไม้ไผ่ 4 ต้น) ---
+      const legConfigs = [
+        { id: 'FL', name: 'เสาหน้าซ้าย (Front-Left Post)', x: -0.40, z: 0.15, ex: new THREE.Vector3(-0.25, 0, 0.18) },
+        { id: 'FR', name: 'เสาหน้าขวา (Front-Right Post)', x: 0.40, z: 0.15, ex: new THREE.Vector3(0.25, 0, 0.18) },
+        { id: 'RL', name: 'เสาหลังซ้าย (Rear-Left Post)', x: -0.40, z: -0.15, ex: new THREE.Vector3(-0.25, 0, -0.18) },
+        { id: 'RR', name: 'เสาหลังขวา (Rear-Right Post)', x: 0.40, z: -0.15, ex: new THREE.Vector3(0.25, 0, -0.18) }
+      ];
+
+      legConfigs.forEach(cfg => {
+        const legGroup = new THREE.Group();
+        legGroup.position.set(cfg.x, 0.28, cfg.z);
+
+        const legMesh = new THREE.Mesh(legGeo, bambooMaterial);
+        legMesh.castShadow = true;
+        legMesh.receiveShadow = true;
+        legGroup.add(legMesh);
+
+        const topCap = new THREE.Mesh(legCapGeo, endGrainMaterial);
+        topCap.rotation.x = -Math.PI / 2;
+        topCap.position.y = 0.2801;
+        legGroup.add(topCap);
+
+        const nodeYOffsets = [-0.14, -0.01, 0.12, 0.23];
+        nodeYOffsets.forEach(ny => {
+          const node = createNodeDecoration(0.0265, 0.014);
+          node.position.y = ny;
+          legGroup.add(node);
+        });
+
+        rackGroup.add(legGroup);
+        registerPart(legGroup, cfg.name, 'เสาหลักไม้ไผ่รับน้ำหนักแนวตั้ง (เส้นผ่านศูนย์กลาง 5.2 ซม.) คัดสรรไม้ไผ่แก่ลำตรง ลนไฟไล่ความชื้นและป้องกันมอด', cfg.ex);
+      });
+
+      // --- B. 6 SIDE HORIZONTAL RAILS (คานข้างซ้าย-ขวา 6 ท่อน) ---
+      const sideRails = [
+        { name: 'ราวจับบนซ้าย (Top Handle)', x: -0.40, y: 0.51, z: 0, ex: new THREE.Vector3(-0.35, 0.08, 0) },
+        { name: 'คานข้างรองชั้นบน (ซ้าย)', x: -0.40, y: 0.40, z: 0, ex: new THREE.Vector3(-0.30, 0.02, 0) },
+        { name: 'คานข้างรองชั้นล่าง (ซ้าย)', x: -0.40, y: 0.14, z: 0, ex: new THREE.Vector3(-0.30, -0.05, 0) },
+        { name: 'ราวจับบนขวา (Top Handle)', x: 0.40, y: 0.51, z: 0, ex: new THREE.Vector3(0.35, 0.08, 0) },
+        { name: 'คานข้างรองชั้นบน (ขวา)', x: 0.40, y: 0.40, z: 0, ex: new THREE.Vector3(0.30, 0.02, 0) },
+        { name: 'คานข้างรองชั้นล่าง (ขวา)', x: 0.40, y: 0.14, z: 0, ex: new THREE.Vector3(0.30, -0.05, 0) }
+      ];
+
+      sideRails.forEach(r => {
+        const railGroup = new THREE.Group();
+        railGroup.position.set(r.x, r.y, r.z);
+
+        const rail = new THREE.Mesh(sideRailGeo, bambooMaterial);
+        rail.rotation.x = Math.PI / 2;
+        rail.castShadow = true;
+        rail.receiveShadow = true;
+        railGroup.add(rail);
+
+        const capFront = new THREE.Mesh(sideRailCapGeo, endGrainMaterial);
+        capFront.position.z = 0.165;
+        railGroup.add(capFront);
+
+        const capBack = new THREE.Mesh(sideRailCapGeo, endGrainMaterial);
+        capBack.rotation.y = Math.PI;
+        capBack.position.z = -0.165;
+        railGroup.add(capBack);
+
+        const node = createNodeDecoration(0.0185, 0.010);
+        node.rotation.x = Math.PI / 2;
+        railGroup.add(node);
+
+        rackGroup.add(railGroup);
+        registerPart(railGroup, r.name, 'คานขวางข้างเชื่อมเสาหน้า-หลัง เพิ่มความแข็งแกร่ง รองรับน้ำหนักชั้นวางและใช้เป็นราวยกเคลื่อนย้าย', r.ex);
+      });
+
+      // --- C. 4 LONGITUDINAL FRONT & REAR RAILS (คานแนวยาวหน้า-หลัง 4 ท่อน) ---
+      const longRails = [
+        { name: 'คานแนวยาวหน้าชั้นบน', y: 0.40, z: 0.15, ex: new THREE.Vector3(0, 0.06, 0.22) },
+        { name: 'คานแนวยาวหลังชั้นบน', y: 0.40, z: -0.15, ex: new THREE.Vector3(0, 0.06, -0.22) },
+        { name: 'คานแนวยาวหน้าชั้นล่าง', y: 0.14, z: 0.15, ex: new THREE.Vector3(0, -0.04, 0.22) },
+        { name: 'คานแนวยาวหลังชั้นล่าง', y: 0.14, z: -0.15, ex: new THREE.Vector3(0, -0.04, -0.22) }
+      ];
+
+      longRails.forEach(lr => {
+        const lrGroup = new THREE.Group();
+        lrGroup.position.set(0, lr.y, lr.z);
+
+        const rail = new THREE.Mesh(longRailGeo, bambooMaterial);
+        rail.rotation.z = Math.PI / 2;
+        rail.castShadow = true;
+        rail.receiveShadow = true;
+        lrGroup.add(rail);
+
+        const capL = new THREE.Mesh(longRailCapGeo, endGrainMaterial);
+        capL.rotation.y = -Math.PI / 2;
+        capL.position.x = -0.40;
+        lrGroup.add(capL);
+
+        const capR = new THREE.Mesh(longRailCapGeo, endGrainMaterial);
+        capR.rotation.y = Math.PI / 2;
+        capR.position.x = 0.40;
+        lrGroup.add(capR);
+
+        [-0.22, 0, 0.22].forEach(nx => {
+          const node = createNodeDecoration(0.0195, 0.010);
+          node.rotation.z = Math.PI / 2;
+          node.position.x = nx;
+          lrGroup.add(node);
+        });
+
+        rackGroup.add(lrGroup);
+        registerPart(lrGroup, lr.name, 'คานแนวยาวรับน้ำหนักซี่ระแนงและกระจายแรงกดทับของรองเท้าอย่างสมดุล', lr.ex);
+      });
+
+      // --- D. 2 CENTER TRANSVERSE CROSS SUPPORTS (คานค้ำกึ่งกลางชั้น 2 ท่อน) ---
+      const centerRails = [
+        { name: 'คานค้ำกึ่งกลางชั้นบน', y: 0.40, z: 0, ex: new THREE.Vector3(0, 0.22, 0) },
+        { name: 'คานค้ำกึ่งกลางชั้นล่าง', y: 0.14, z: 0, ex: new THREE.Vector3(0, -0.10, 0) }
+      ];
+      centerRails.forEach(cr => {
+        const crGroup = new THREE.Group();
+        crGroup.position.set(0, cr.y, cr.z);
+
+        const m = new THREE.Mesh(centerRailGeo, bambooMaterial);
+        m.rotation.x = Math.PI / 2;
+        m.castShadow = true;
+        m.receiveShadow = true;
+        crGroup.add(m);
+
+        const node = createNodeDecoration(0.0175, 0.009);
+        node.rotation.x = Math.PI / 2;
+        crGroup.add(node);
+
+        rackGroup.add(crGroup);
+        registerPart(crGroup, cr.name, 'คานค้ำกึ่งกลาง ป้องกันไม้ระแนงตกท้องช้างเมื่อวางรองเท้าหนัก เสริมความแข็งแกร่งตามหลักช่างชาวค่าย', cr.ex);
+      });
+
+      // --- E. SCOUT SQUARE LASHINGS (เงื่อนเชือกผูกประกบลูกเสือ) ---
+      const lashingsGroup = new THREE.Group();
+      const lashingPositions = [
+        { x: -0.40, y: 0.51, z: 0 },
+        { x: -0.40, y: 0.40, z: 0 },
+        { x: -0.40, y: 0.14, z: 0 },
+        { x: 0.40, y: 0.51, z: 0 },
+        { x: 0.40, y: 0.40, z: 0 },
+        { x: 0.40, y: 0.14, z: 0 },
+        { x: 0, y: 0.40, z: 0 },
+        { x: 0, y: 0.14, z: 0 }
+      ];
+      lashingPositions.forEach(lp => {
+        const lashing = createScoutLashing(lp.x === 0 ? 0.020 : 0.026);
+        lashing.position.set(lp.x, lp.y, lp.z);
+        lashingsGroup.add(lashing);
+      });
+      rackGroup.add(lashingsGroup);
+      registerPart(lashingsGroup, 'เงื่อนเชือกผูกประกบลูกเสือ (Scout Square Lashings)', 'เทคนิคการผูกเชือกเงื่อนประกบกากบาทตามหลักวิชาการลูกเสือ ช่วยรัดข้อต่อไม้ไผ่อย่างแน่นหนา ยืดหยุ่น และคงทน', new THREE.Vector3(0, 0, 0));
+
+      // --- F. BAMBOO SLATS WITH ORGANIC LENGTH VARIATIONS (ซี่ระแนงไม้ไผ่ปูพื้น 14 ซี่) ---
+      const slatZOffsets = [-0.12, -0.08, -0.04, 0.0, 0.04, 0.08, 0.12];
+
+      // Top Shelf Slats (Resting at y = 0.430)
+      const topSlatsGroup = new THREE.Group();
+      slatZOffsets.forEach((sz, idx) => {
+        const lengthVar = 0.835 + Math.sin(idx * 2.3) * 0.008;
+        const sGeo = new THREE.CylinderGeometry(0.011, 0.011, lengthVar, 20);
+        const slat = new THREE.Mesh(sGeo, bambooMaterial);
+        slat.rotation.z = Math.PI / 2;
+        slat.position.set(0, 0.430, sz);
+        slat.castShadow = true;
+        slat.receiveShadow = true;
+        topSlatsGroup.add(slat);
+
+        [-0.24, -0.07, 0.10, 0.27].forEach(nx => {
+          const sNode = createNodeDecoration(0.0115, 0.007);
+          sNode.rotation.z = Math.PI / 2;
+          sNode.position.set(nx, 0.430, sz);
+          topSlatsGroup.add(sNode);
+        });
+
+        const capL = new THREE.Mesh(slatCapGeo, endGrainMaterial);
+        capL.rotation.y = -Math.PI / 2;
+        capL.position.set(-lengthVar / 2, 0.430, sz);
+        topSlatsGroup.add(capL);
+
+        const capR = new THREE.Mesh(slatCapGeo, endGrainMaterial);
+        capR.rotation.y = Math.PI / 2;
+        capR.position.set(lengthVar / 2, 0.430, sz);
+        topSlatsGroup.add(capR);
+      });
+      rackGroup.add(topSlatsGroup);
+      registerPart(topSlatsGroup, 'ซี่ไม้ไผ่ปูพื้นชั้นบน (7 ซี่)', 'ซี่ระแนงไม้ไผ่กลม 7 ซี่ วางเรียงขนานกันอย่างได้ระดับ ระบายอากาศยอดเยี่ยม ป้องกันความชื้นสะสมและกลิ่นอับ', new THREE.Vector3(0, 0.32, 0));
+
+      // Bottom Shelf Slats (Resting at y = 0.170)
+      const btmSlatsGroup = new THREE.Group();
+      slatZOffsets.forEach((sz, idx) => {
+        const lengthVar = 0.835 + Math.cos(idx * 1.9) * 0.008;
+        const sGeo = new THREE.CylinderGeometry(0.011, 0.011, lengthVar, 20);
+        const slat = new THREE.Mesh(sGeo, bambooMaterial);
+        slat.rotation.z = Math.PI / 2;
+        slat.position.set(0, 0.170, sz);
+        slat.castShadow = true;
+        slat.receiveShadow = true;
+        btmSlatsGroup.add(slat);
+
+        [-0.25, -0.08, 0.09, 0.26].forEach(nx => {
+          const sNode = createNodeDecoration(0.0115, 0.007);
+          sNode.rotation.z = Math.PI / 2;
+          sNode.position.set(nx, 0.170, sz);
+          btmSlatsGroup.add(sNode);
+        });
+
+        const capL = new THREE.Mesh(slatCapGeo, endGrainMaterial);
+        capL.rotation.y = -Math.PI / 2;
+        capL.position.set(-lengthVar / 2, 0.170, sz);
+        btmSlatsGroup.add(capL);
+
+        const capR = new THREE.Mesh(slatCapGeo, endGrainMaterial);
+        capR.rotation.y = Math.PI / 2;
+        capR.position.set(lengthVar / 2, 0.170, sz);
+        btmSlatsGroup.add(capR);
+      });
+      rackGroup.add(btmSlatsGroup);
+      registerPart(btmSlatsGroup, 'ซี่ไม้ไผ่ปูพื้นชั้นล่าง (7 ซี่)', 'ซี่ระแนงไม้ไผ่ชั้นล่าง ยกสูงจากพื้นดิน 14 ซม. ป้องกันน้ำขัง ชายป่าชื้น และแมลงสัตว์เลื้อยคลาน', new THREE.Vector3(0, -0.12, 0));
+
+      // --- G. REALISTIC HEXAGONAL BOLTS, WASHERS & NUTS (12 จุด) ---
+      const hexHeadGeo = new THREE.CylinderGeometry(0.0075, 0.0075, 0.009, 6);
+      const washerGeo = new THREE.CylinderGeometry(0.0135, 0.0135, 0.0025, 20);
+      const boltPositions = [
+        { x: -0.428, y: 0.51, z: 0.15, rotZ: Math.PI / 2, ex: new THREE.Vector3(-0.35, 0.08, 0.15) },
+        { x: -0.428, y: 0.51, z: -0.15, rotZ: Math.PI / 2, ex: new THREE.Vector3(-0.35, 0.08, -0.15) },
+        { x: -0.428, y: 0.40, z: 0.15, rotZ: Math.PI / 2, ex: new THREE.Vector3(-0.35, 0.02, 0.15) },
+        { x: -0.428, y: 0.40, z: -0.15, rotZ: Math.PI / 2, ex: new THREE.Vector3(-0.35, 0.02, -0.15) },
+        { x: -0.428, y: 0.14, z: 0.15, rotZ: Math.PI / 2, ex: new THREE.Vector3(-0.35, -0.04, 0.15) },
+        { x: -0.428, y: 0.14, z: -0.15, rotZ: Math.PI / 2, ex: new THREE.Vector3(-0.35, -0.04, -0.15) },
+        { x: 0.428, y: 0.51, z: 0.15, rotZ: -Math.PI / 2, ex: new THREE.Vector3(0.35, 0.08, 0.15) },
+        { x: 0.428, y: 0.51, z: -0.15, rotZ: -Math.PI / 2, ex: new THREE.Vector3(0.35, 0.08, -0.15) },
+        { x: 0.428, y: 0.40, z: 0.15, rotZ: -Math.PI / 2, ex: new THREE.Vector3(0.35, 0.02, 0.15) },
+        { x: 0.428, y: 0.40, z: -0.15, rotZ: -Math.PI / 2, ex: new THREE.Vector3(0.35, 0.02, -0.15) },
+        { x: 0.428, y: 0.14, z: 0.15, rotZ: -Math.PI / 2, ex: new THREE.Vector3(0.35, -0.04, 0.15) },
+        { x: 0.428, y: 0.14, z: -0.15, rotZ: -Math.PI / 2, ex: new THREE.Vector3(0.35, -0.04, -0.15) }
+      ];
+
+      const boltsGroup = new THREE.Group();
+      boltPositions.forEach(bp => {
+        const bg = new THREE.Group();
+        bg.position.set(bp.x, bp.y, bp.z);
+        bg.rotation.z = bp.rotZ;
+
+        const boltHead = new THREE.Mesh(hexHeadGeo, hexBoltMaterial);
+        boltHead.castShadow = true;
+        const washer = new THREE.Mesh(washerGeo, washerMaterial);
+        washer.position.y = -0.004;
+
+        bg.add(boltHead);
+        bg.add(washer);
+        boltsGroup.add(bg);
+      });
+      rackGroup.add(boltsGroup);
+      registerPart(boltsGroup, 'น็อตหกเหลี่ยมและแหวนรองสเตนเลส (12 จุด)', 'จุดเชื่อมต่อน็อตเกลียวเบอร์ 10 พร้อมแหวนรองกว้าง ขันแน่นไม่ทำให้กระบอกไม้ไผ่แตก ถอดประกอบซ้ำได้ไม่เสียหาย', new THREE.Vector3(0, 0, 0));
+
+      // --- H. 3D DEMO CAMP SNEAKERS & BOOTS (4 คู่จัดวางสมจริง) ---
+      const shoesGroup = new THREE.Group();
+      rackGroup.add(shoesGroup);
+
+      function createStylizedShoe(soleColor = 0xf8fafc, bodyColor = 0x1e3a8a, laceColor = 0xffffff, isBoot = false) {
+        const sGroup = new THREE.Group();
+
+        const soleMat = new THREE.MeshStandardMaterial({ color: soleColor, roughness: 0.45, metalness: 0.02 });
+        const sole = new THREE.Mesh(new THREE.BoxGeometry(0.088, 0.018, 0.22), soleMat);
+        sole.castShadow = true;
+        sole.receiveShadow = true;
+        sGroup.add(sole);
+
+        const bodyHeight = isBoot ? 0.085 : 0.048;
+        const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: isBoot ? 0.48 : 0.72, metalness: 0.05 });
+        const body = new THREE.Mesh(new THREE.BoxGeometry(0.082, bodyHeight, 0.14), bodyMat);
+        body.position.set(0, 0.009 + bodyHeight / 2, -0.02);
+        body.castShadow = true;
+        sGroup.add(body);
+
+        const toe = new THREE.Mesh(new THREE.CylinderGeometry(0.041, 0.041, 0.065, 16), soleMat);
+        toe.rotation.x = Math.PI / 2;
+        toe.position.set(0, 0.024, 0.055);
+        toe.scale.set(1, 0.55, 1);
+        sGroup.add(toe);
+
+        const laceMat = new THREE.MeshStandardMaterial({ color: laceColor, roughness: 0.5 });
+        const laceCount = isBoot ? 4 : 3;
+        for (let l = 0; l < laceCount; l++) {
+          const lace = new THREE.Mesh(new THREE.BoxGeometry(0.046, 0.0035, 0.009), laceMat);
+          lace.position.set(0, 0.012 + bodyHeight - 0.006 - l * 0.015, 0.01 - l * 0.022);
+          sGroup.add(lace);
+        }
+
+        return sGroup;
+      }
+
+      // Pair 1: Tan Leather Scout Boots on Top Shelf (Left)
+      const shoe1L = createStylizedShoe(0x27272a, 0x92400e, 0xfde047, true);
+      shoe1L.position.set(-0.24, 0.451, 0.01);
+      shoe1L.rotation.y = 0.06;
+      shoesGroup.add(shoe1L);
+
+      const shoe1R = createStylizedShoe(0x27272a, 0x92400e, 0xfde047, true);
+      shoe1R.position.set(-0.13, 0.451, 0.01);
+      shoe1R.rotation.y = -0.05;
+      shoesGroup.add(shoe1R);
+
+      // Pair 2: Navy Camp Canvas Sneakers on Top Shelf (Right)
+      const shoe2L = createStylizedShoe(0xffffff, 0x1e3a8a, 0xffffff, false);
+      shoe2L.position.set(0.13, 0.451, 0.01);
+      shoe2L.rotation.y = 0.05;
+      shoesGroup.add(shoe2L);
+
+      const shoe2R = createStylizedShoe(0xffffff, 0x1e3a8a, 0xffffff, false);
+      shoe2R.position.set(0.24, 0.451, 0.01);
+      shoe2R.rotation.y = -0.06;
+      shoesGroup.add(shoe2R);
+
+      // Pair 3: Trail Running Shoes on Bottom Shelf (Left)
+      const shoe3L = createStylizedShoe(0x18181b, 0x3f3f46, 0xf97316, false);
+      shoe3L.position.set(-0.24, 0.191, 0.01);
+      shoe3L.rotation.y = 0.06;
+      shoesGroup.add(shoe3L);
+
+      const shoe3R = createStylizedShoe(0x18181b, 0x3f3f46, 0xf97316, false);
+      shoe3R.position.set(-0.13, 0.191, 0.01);
+      shoe3R.rotation.y = -0.05;
+      shoesGroup.add(shoe3R);
+
+      // Pair 4: Olive Green Camp Clogs on Bottom Shelf (Right)
+      const shoe4L = createStylizedShoe(0x3f4f2c, 0x556b2f, 0x2e3a1b, false);
+      shoe4L.position.set(0.13, 0.191, 0.01);
+      shoe4L.rotation.y = 0.05;
+      shoesGroup.add(shoe4L);
+
+      const shoe4R = createStylizedShoe(0x3f4f2c, 0x556b2f, 0x2e3a1b, false);
+      shoe4R.position.set(0.24, 0.191, 0.01);
+      shoe4R.rotation.y = -0.06;
+      shoesGroup.add(shoe4R);
+
+      registerPart(shoesGroup, 'รองเท้าจำลองสไตล์ชาวค่าย (4 คู่)', 'แบบจำลองรองเท้าเดินป่า บูทหนัง และรองเท้าผ้าใบ เพื่อแสดงการจัดวางและมิติการใช้งานจริง', new THREE.Vector3(0, 0.14, 0));
+
+      // --- I. DIMENSION ANNOTATION LINES (มิติสัดส่วนจริง) ---
+      const dimensionsGroup = new THREE.Group();
+      dimensionsGroup.visible = false;
+      scene.add(dimensionsGroup);
+
+      function createDimensionLine(start, end, text, offsetDir) {
+        const g = new THREE.Group();
+        const mat = new THREE.LineBasicMaterial({ color: 0xd97706, linewidth: 2 });
+        const geom = new THREE.BufferGeometry().setFromPoints([start, end]);
+        const line = new THREE.Line(geom, mat);
+        g.add(line);
+
+        const tickLen = 0.035;
+        const tickMat = new THREE.LineBasicMaterial({ color: 0xd97706 });
+        const tick1 = new THREE.Line(
+          new THREE.BufferGeometry().setFromPoints([
+            start.clone().add(offsetDir.clone().multiplyScalar(tickLen)),
+            start.clone().sub(offsetDir.clone().multiplyScalar(tickLen))
+          ]), tickMat
+        );
+        const tick2 = new THREE.Line(
+          new THREE.BufferGeometry().setFromPoints([
+            end.clone().add(offsetDir.clone().multiplyScalar(tickLen)),
+            end.clone().sub(offsetDir.clone().multiplyScalar(tickLen))
+          ]), tickMat
+        );
+        g.add(tick1);
+        g.add(tick2);
+
+        const tCanvas = document.createElement('canvas');
+        tCanvas.width = 256;
+        tCanvas.height = 64;
+        const tCtx = tCanvas.getContext('2d');
+        tCtx.fillStyle = '#ffffff';
+        tCtx.roundRect ? tCtx.roundRect(8, 8, 240, 48, 12) : tCtx.fillRect(8, 8, 240, 48);
+        tCtx.fill();
+        tCtx.lineWidth = 2;
+        tCtx.strokeStyle = '#d97706';
+        tCtx.stroke();
+        tCtx.fillStyle = '#111827';
+        tCtx.font = 'bold 22px Prompt, sans-serif';
+        tCtx.textAlign = 'center';
+        tCtx.textBaseline = 'middle';
+        tCtx.fillText(text, 128, 32);
+
+        const sTex = new THREE.CanvasTexture(tCanvas);
+        const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: sTex }));
+        const mid = start.clone().add(end).multiplyScalar(0.5);
+        sprite.position.copy(mid).add(offsetDir.clone().multiplyScalar(0.07));
+        sprite.scale.set(0.32, 0.08, 1);
+        g.add(sprite);
+
+        dimensionsGroup.add(g);
+      }
+
+      createDimensionLine(new THREE.Vector3(-0.42, 0.03, 0.23), new THREE.Vector3(0.42, 0.03, 0.23), 'กว้าง 85 ซม.', new THREE.Vector3(0, 0, 1));
+      createDimensionLine(new THREE.Vector3(0.52, 0.03, -0.15), new THREE.Vector3(0.52, 0.03, 0.15), 'ลึก 35 ซม.', new THREE.Vector3(1, 0, 0));
+      createDimensionLine(new THREE.Vector3(-0.52, 0, 0.15), new THREE.Vector3(-0.52, 0.56, 0.15), 'สูง 56 ซม.', new THREE.Vector3(-1, 0, 0));
+      createDimensionLine(new THREE.Vector3(0.48, 0.17, 0.15), new THREE.Vector3(0.48, 0.43, 0.15), 'ระยะชั้น 26 ซม.', new THREE.Vector3(1, 0, 0));
+      createDimensionLine(new THREE.Vector3(0.48, 0, 0.15), new THREE.Vector3(0.48, 0.14, 0.15), 'ยกพื้น 14 ซม.', new THREE.Vector3(1, 0, 0));
+
+      // Fade out loading
+      setTimeout(() => {
+        if (loadingEl) loadingEl.classList.add('fade-out');
+      }, 350);
+
+      // 7. Raycasting for Part Hover / Click
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2(-999, -999);
+      let hoveredItem = null;
+
+      function onMouseMove(event) {
+        const rect = canvas.getBoundingClientRect();
+        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(interactiveParts, true);
+
+        if (intersects.length > 0) {
+          let hit = intersects[0].object;
+          while (hit && !hit.userData.name && hit.parent !== rackGroup && hit.parent) {
+            hit = hit.parent;
+          }
+          if (hit && hit.userData && hit.userData.name) {
+            if (hoveredItem !== hit) {
+              hoveredItem = hit;
+              canvas.style.cursor = 'pointer';
+              tooltip.classList.remove('hidden');
+              partTitleEl.textContent = '🎋 ' + hit.userData.name;
+              partDescEl.textContent = hit.userData.desc;
+            }
+          }
+        } else {
+          if (hoveredItem) {
+            hoveredItem = null;
+            canvas.style.cursor = 'grab';
+            tooltip.classList.add('hidden');
+          }
+        }
+      }
+
+      canvas.addEventListener('mousemove', onMouseMove);
+      canvas.addEventListener('mouseleave', () => {
+        hoveredItem = null;
+        tooltip.classList.add('hidden');
+      });
+
+      // 8. Toolbar Button Interactions
+      // Auto-Rotate
+      const btnToggleRotate = document.getElementById('btnToggleRotate');
+      const rotateBtnText = document.getElementById('rotateBtnText');
+      btnToggleRotate.addEventListener('click', () => {
+        if (controls) {
+          controls.autoRotate = !controls.autoRotate;
+          btnToggleRotate.classList.toggle('active', controls.autoRotate);
+          rotateBtnText.textContent = controls.autoRotate ? 'กำลังหมุนอัตโนมัติ' : 'หมุนอัตโนมัติ';
+        }
+      });
+
+      // Demo Shoes Toggle
+      const btnToggleShoes = document.getElementById('btnToggleShoes');
+      const shoesBtnText = document.getElementById('shoesBtnText');
+      btnToggleShoes.addEventListener('click', () => {
+        shoesGroup.visible = !shoesGroup.visible;
+        btnToggleShoes.classList.toggle('active', shoesGroup.visible);
+        shoesBtnText.textContent = shoesGroup.visible ? '👟 รองเท้าจำลอง (เปิด)' : '👟 รองเท้าจำลอง (ปิด)';
+      });
+
+      // Lighting Modes (Cycle through: Studio -> Outdoor -> Campfire Night)
+      const lightingModes = ['studio', 'outdoor', 'campfire'];
+      let currentLightIndex = 0;
+      const btnToggleLighting = document.getElementById('btnToggleLighting');
+      const lightingBtnText = document.getElementById('lightingBtnText');
+
+      function applyLightingMode(mode) {
+        if (mode === 'outdoor') {
+          ambientLight.color.setHex(0xfff7ed);
+          ambientLight.intensity = 0.72;
+          keyLight.color.setHex(0xffedd5);
+          keyLight.intensity = 1.35;
+          fillLight.color.setHex(0xbae6fd);
+          fillLight.intensity = 0.55;
+          rimLight1.color.setHex(0xfde047);
+          rimLight1.intensity = 0.75;
+          scene.background = new THREE.Color(0xf1f6fb);
+          lightingBtnText.textContent = 'แสง: แดดกลางแจ้ง ☀️';
+        } else if (mode === 'campfire') {
+          ambientLight.color.setHex(0xffedd5);
+          ambientLight.intensity = 0.35;
+          keyLight.color.setHex(0xf97316);
+          keyLight.intensity = 1.45;
+          fillLight.color.setHex(0x38bdf8);
+          fillLight.intensity = 0.22;
+          rimLight1.color.setHex(0xea580c);
+          rimLight1.intensity = 0.95;
+          scene.background = new THREE.Color(0x1a1a24);
+          lightingBtnText.textContent = 'แสง: รอบกองไฟ 🌙';
+        } else {
+          // Studio
+          ambientLight.color.setHex(0xffffff);
+          ambientLight.intensity = 0.82;
+          keyLight.color.setHex(0xfffaee);
+          keyLight.intensity = 1.15;
+          fillLight.color.setHex(0xdbeafe);
+          fillLight.intensity = 0.52;
+          rimLight1.color.setHex(0xfef08a);
+          rimLight1.intensity = 0.65;
+          scene.background = new THREE.Color(0xf6f6f8);
+          lightingBtnText.textContent = 'แสง: สตูดิโอ 💡';
+        }
+      }
+
+      btnToggleLighting.addEventListener('click', () => {
+        currentLightIndex = (currentLightIndex + 1) % lightingModes.length;
+        applyLightingMode(lightingModes[currentLightIndex]);
+      });
+
+      // Bamboo Texture Finish Toggle (Cycle: Natural -> Varnished -> Green)
+      const finishes = ['natural', 'varnished', 'green'];
+      let finishIndex = 0;
+      const btnToggleTexture = document.getElementById('btnToggleTexture');
+      const textureBtnText = document.getElementById('textureBtnText');
+
+      btnToggleTexture.addEventListener('click', () => {
+        finishIndex = (finishIndex + 1) % finishes.length;
+        const f = finishes[finishIndex];
+        bambooMaterial.map = textures[f];
+        bambooMaterial.roughness = f === 'varnished' ? 0.26 : 0.32;
+        bambooMaterial.needsUpdate = true;
+
+        if (f === 'varnished') {
+          textureBtnText.textContent = 'ผิวไม้: เคลือบเงารมควัน 🍯';
+        } else if (f === 'green') {
+          textureBtnText.textContent = 'ผิวไม้: ไม้ไผ่สดชาวค่าย 🎋';
+        } else {
+          textureBtnText.textContent = 'ผิวไม้: ธรรมชาติ 🌾';
+        }
+      });
+
+      // Explode View Animation
+      let isExploded = false;
+      let explodeProgress = 0;
+      const btnToggleExplode = document.getElementById('btnToggleExplode');
+      const explodeBtnText = document.getElementById('explodeBtnText');
+      btnToggleExplode.addEventListener('click', () => {
+        isExploded = !isExploded;
+        btnToggleExplode.classList.toggle('active', isExploded);
+        explodeBtnText.textContent = isExploded ? 'ประกอบกลับ' : 'แยกชิ้นส่วน';
+      });
+
+      // Dimensions Toggle
+      const btnToggleDimensions = document.getElementById('btnToggleDimensions');
+      const dimBtnText = document.getElementById('dimBtnText');
+      btnToggleDimensions.addEventListener('click', () => {
+        dimensionsGroup.visible = !dimensionsGroup.visible;
+        btnToggleDimensions.classList.toggle('active', dimensionsGroup.visible);
+        dimBtnText.textContent = dimensionsGroup.visible ? 'ซ่อนขนาดจำลอง' : 'แสดงขนาด';
+      });
+
+      // Wireframe Toggle
+      let isWireframe = false;
+      const btnToggleWireframe = document.getElementById('btnToggleWireframe');
+      btnToggleWireframe.addEventListener('click', () => {
+        isWireframe = !isWireframe;
+        btnToggleWireframe.classList.toggle('active', isWireframe);
+        bambooMaterial.wireframe = isWireframe;
+        nodeRingMaterial.wireframe = isWireframe;
+        hexBoltMaterial.wireframe = isWireframe;
+        if (typeof ropeLashingMaterial !== 'undefined') ropeLashingMaterial.wireframe = isWireframe;
+      });
+
+      // Camera Presets
+      const presetButtons = document.querySelectorAll('.preset-btn');
+      function setCameraView(view) {
+        if (!controls) return;
+        presetButtons.forEach(b => b.classList.remove('active'));
+        const targetBtn = document.querySelector(`[data-view="${view}"]`);
+        if (targetBtn) targetBtn.classList.add('active');
+
+        if (view === 'isometric') {
+          controls.autoRotate = true;
+          btnToggleRotate.classList.add('active');
+          rotateBtnText.textContent = 'กำลังหมุนอัตโนมัติ';
+        } else {
+          controls.autoRotate = false;
+          btnToggleRotate.classList.remove('active');
+          rotateBtnText.textContent = 'หมุนอัตโนมัติ';
+        }
+
+        const duration = 800;
+        const startPos = camera.position.clone();
+        let endPos;
+
+        switch (view) {
+          case 'front':
+            endPos = new THREE.Vector3(0, 0.30, 1.30);
+            break;
+          case 'side':
+            endPos = new THREE.Vector3(1.30, 0.30, 0);
+            break;
+          case 'top':
+            endPos = new THREE.Vector3(0.01, 1.38, 0.01);
+            break;
+          case 'isometric':
+          default:
+            endPos = new THREE.Vector3(1.22, 0.84, 1.22);
+            break;
+        }
+
+        const startTime = performance.now();
+        function animateCam(time) {
+          const elapsed = time - startTime;
+          const t = Math.min(elapsed / duration, 1);
+          const ease = 1 - Math.pow(1 - t, 3);
+          camera.position.lerpVectors(startPos, endPos, ease);
+          controls.target.set(0, 0.28, 0);
+          controls.update();
+
+          if (t < 1) {
+            requestAnimationFrame(animateCam);
+          }
+        }
+        requestAnimationFrame(animateCam);
+      }
+
+      document.getElementById('viewIso').addEventListener('click', () => setCameraView('isometric'));
+      document.getElementById('viewFront').addEventListener('click', () => setCameraView('front'));
+      document.getElementById('viewSide').addEventListener('click', () => setCameraView('side'));
+      document.getElementById('viewTop').addEventListener('click', () => setCameraView('top'));
+
+      document.getElementById('btnResetView').addEventListener('click', () => setCameraView('isometric'));
+
+      const btnFullscreen = document.getElementById('btnFullscreen');
+      btnFullscreen.addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+          container.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      });
+
+      function onWindowResize() {
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
+      }
+      window.addEventListener('resize', onWindowResize);
+
+      // 10. Main Animation Loop
+      function animate() {
+        requestAnimationFrame(animate);
+
+        const targetProgress = isExploded ? 1 : 0;
+        explodeProgress += (targetProgress - explodeProgress) * 0.08;
+
+        explodeItems.forEach(item => {
+          if (item.userData && item.userData.defaultPos && item.userData.explodePos) {
+            item.position.lerpVectors(
+              item.userData.defaultPos,
+              item.userData.explodePos,
+              explodeProgress
+            );
+          }
+        });
+
+        if (controls) controls.update();
+        renderer.render(scene, camera);
+      }
+
+      animate();
+    })();
+  </script>
+</body>
+</html>

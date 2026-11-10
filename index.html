@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>หน้าหลัก | โครงงานลูกเสือ</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ทำให้เลื่อนหน้าจอได้ลื่นไหล ไม่ถูกล็อค */
+    html, body {
+      min-height: 100%;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    body {
+      font-family: 'Prompt', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f5f5f7;
+      color: #1d1d1f;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Ambient Background Glow */
+    .ambient-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .ambient-circle-1 {
+      position: absolute;
+      top: -80px;
+      left: 10%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(147, 197, 253, 0.42) 0%, rgba(196, 181, 253, 0) 70%);
+      filter: blur(80px);
+      border-radius: 50%;
+    }
+
+    .ambient-circle-2 {
+      position: absolute;
+      top: 120px;
+      right: 8%;
+      width: 520px;
+      height: 520px;
+      background: radial-gradient(circle, rgba(253, 164, 175, 0.38) 0%, rgba(254, 215, 170, 0) 70%);
+      filter: blur(80px);
+      border-radius: 50%;
+    }
+
+    /* ===================================================
+       2. Attached Top Header (เฮดเด้อติดขอบบน)
+       =================================================== */
+    .header-top {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+      height: 60px;
+      z-index: 1000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(28px) saturate(190%);
+      -webkit-backdrop-filter: blur(28px) saturate(190%);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .header-container {
+      width: 100%;
+      max-width: 1120px;
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      padding: 0 24px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .brand:hover {
+      opacity: 0.85;
+      transform: scale(0.99);
+    }
+
+    .brand-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #111827;
+      display: inline-block;
+      line-height: 1.2;
+    }
+
+    .nav-pill-wrapper {
+      background: rgba(0, 0, 0, 0.05);
+      padding: 4px;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      list-style: none;
+      gap: 4px;
+    }
+
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 18px;
+      text-decoration: none;
+      font-size: 0.93rem;
+      font-weight: 500;
+      color: #4b5563;
+      border-radius: 9999px;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      white-space: nowrap;
+    }
+
+    .nav-link:hover {
+      color: #111827;
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    .nav-link.active {
+      color: #0071e3;
+      font-weight: 600;
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      cursor: pointer;
+      color: #1d1d1f;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .mobile-menu-btn:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    .mobile-drawer {
+      display: none;
+      position: fixed;
+      top: 60px;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(30px) saturate(190%);
+      -webkit-backdrop-filter: blur(30px) saturate(190%);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 0 0 22px 22px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.1);
+      padding: 16px 20px;
+      flex-direction: column;
+      gap: 6px;
+      opacity: 0;
+      transform: translateY(-8px);
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 999;
+    }
+
+    .mobile-drawer.open {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .mobile-link {
+      display: flex;
+      align-items: center;
+      padding: 12px 18px;
+      font-size: 1rem;
+      text-decoration: none;
+      color: #1d1d1f;
+      font-weight: 500;
+      border-radius: 14px;
+    }
+
+    .mobile-link.active {
+      background: rgba(0, 113, 227, 0.08);
+      color: #0071e3;
+      font-weight: 600;
+    }
+
+    @media (max-width: 820px) {
+      html, body {
+        height: auto;
+        min-height: 100%;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .header-container {
+        display: flex;
+        justify-content: space-between;
+        padding: 0 20px;
+      }
+      .nav-pill-wrapper {
+        display: none;
+      }
+      .mobile-menu-btn, .mobile-drawer {
+        display: flex;
+      }
+      main {
+        padding: 80px 20px 40px;
+        min-height: calc(100dvh - 60px);
+      }
+    }
+
+    /* Main Section: เลื่อนได้อิสระ ไม่ถูกบีบ */
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 24px 30px;
+      min-height: calc(100dvh - 60px);
+      position: relative;
+      z-index: 1;
+      width: 100%;
+    }
+
+    .hero-section {
+      max-width: 780px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .hero-pill-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 15px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: #0071e3;
+      background: rgba(0, 113, 227, 0.08);
+      border-radius: 9999px;
+      margin-bottom: 18px;
+      border: 1px solid rgba(0, 113, 227, 0.16);
+    }
+
+    .hero-title {
+      font-size: clamp(2.1rem, 4.4vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: -0.03em;
+      color: #1d1d1f;
+      margin-bottom: 16px;
+    }
+
+    .hero-title span {
+      background: linear-gradient(135deg, #0071e3 0%, #b25aff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-description {
+      font-size: clamp(0.95rem, 1.6vw, 1.15rem);
+      line-height: 1.6;
+      color: #6e6e73;
+      max-width: 600px;
+      margin: 0 auto 28px;
+      font-weight: 400;
+    }
+
+    .hero-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-apple-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 30px;
+      font-size: 0.96rem;
+      font-weight: 500;
+      text-decoration: none;
+      color: #ffffff;
+      background: #0071e3;
+      border-radius: 9999px;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 4px 12px rgba(0, 113, 227, 0.25);
+    }
+
+    .btn-apple-pill:hover {
+      background: #0077ed;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(0, 113, 227, 0.35);
+    }
+
+    .btn-apple-pill:active {
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="ambient-bg">
+    <div class="ambient-circle-1"></div>
+    <div class="ambient-circle-2"></div>
+  </div>
+
+  <header class="header-top" id="navbar">
+    <div class="header-container">
+      <a href="index.html" class="brand">
+        <span class="brand-title">โครงงานลูกเสือ</span>
+      </a>
+
+      <div class="nav-pill-wrapper">
+        <ul class="nav-links">
+          <li><a href="index.html" class="nav-link active">หน้าหลัก</a></li>
+          <li><a href="features.html" class="nav-link">โครงงาน</a></li>
+          <li><a href="models.html" class="nav-link">โมเดล</a></li>
+          <li><a href="about.html" class="nav-link">About</a></li>
+        </ul>
+      </div>
+
+      <div class="nav-actions">
+        <button class="mobile-menu-btn" id="mobileToggle" aria-label="เปิดเมนู">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="mobile-drawer" id="mobileDrawer">
+    <a href="index.html" class="mobile-link active">หน้าหลัก</a>
+    <a href="features.html" class="mobile-link">โครงงาน</a>
+    <a href="models.html" class="mobile-link">โมเดล</a>
+    <a href="about.html" class="mobile-link">About</a>
+  </div>
+
+  <main>
+    <section class="hero-section">
+      <div class="hero-pill-badge">
+        <span>💡 นวัตกรรมสิ่งประดิษฐ์</span>
+      </div>
+      
+      <h1 class="hero-title">
+        โครงงาน <span>ชั้นวางรองเท้าชาวค่าย</span><br>กลุ่ม2กลอง3หมู่1
+      </h1>
+      
+      <p class="hero-description">
+        เพิ่มความเป็นระเบียบ สะดวกสบาย และถูกสุขอนามัยในค่ายพักแรม ออกแบบให้แข็งแรง ใช้งานง่าย และตอบโจทย์ชีวิตชาวค่ายอย่างแท้จริง
+      </p>
+
+      <div class="hero-buttons">
+        <a href="features.html" class="btn-apple-pill">
+          <span>ไปยังหน้าโครงงาน</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const mobileToggle = document.getElementById('mobileToggle');
+    const mobileDrawer = document.getElementById('mobileDrawer');
+
+    mobileToggle.addEventListener('click', () => {
+      mobileDrawer.classList.toggle('open');
+    });
+
+    document.querySelectorAll('.mobile-link').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileDrawer.classList.remove('open');
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      const navbar = document.getElementById('navbar');
+      if (!navbar.contains(e.target) && !mobileDrawer.contains(e.target)) {
+        mobileDrawer.classList.remove('open');
+      }
+    });
+  </script>
+</body>
+</html>
